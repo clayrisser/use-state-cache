@@ -4,7 +4,7 @@
 
 > react hook to cache state
 
-I built this hook to cache and hydrate state using the same amazing `setState` api so familiar to react developers.
+I built this hook to cache and hydrate state based on the same amazing `setState` api so familiar to react developers.
 
 Please ★ this repo if you found it useful ★ ★ ★
 
@@ -19,13 +19,9 @@ Please ★ this repo if you found it useful ★ ★ ★
 npm install --save use-state-cache
 ```
 
-## Dependencies
-
-- [NodeJS](https://nodejs.org)
-
 ## Usage
 
-> The lifecycle of the `useStateCache` hook differs slightly from the `useState` hook.
+The lifecycle of the `useStateCache` hook differs slightly from the `useState` hook.
 
 ```
 import useStateCache from 'use-state-cache';
@@ -82,15 +78,19 @@ const Todo: FC<TodoProps> = (props: TodoProps) => {
     if (todos) setTodos([...todos, todo]);
   }
 
-  if (!todos) return <div>Loading . . .</div>
+  if (!todos) return <div>Loading . . .</div>;
   return (
     <div>
-      <input id="todo" name="todo" onChange={(e: any) => setTodo(e.target.value)} />
+      <input
+        id="todo"
+        name="todo"
+        onChange={(e: any) => setTodo(e.target.value)}
+      />
       <button onClick={handleClick}>Add Todo</button>
       <div>{JSON.stringify(todos)}</div>
     </div>
   );
-}
+};
 
 export default Todo;
 ```
@@ -98,7 +98,7 @@ export default Todo;
 ### Provider Props
 
 | prop        | default                      | description                                                                         |
-| ---         | ----                         | ----------                                                                          |
+| ----------- | ---------------------------- | ----------------------------------------------------------------------------------- |
 | `enabled`   | `true`                       | enable caching (when disabled, behavior is exactly like `setState`)                 |
 | `namespace` | name found in `package.json` | namespace keys in storage                                                           |
 | `silence`   | `false`                      | silence warnings                                                                    |
@@ -107,10 +107,6 @@ export default Todo;
 ## Support
 
 Submit an [issue](https://github.com/codejamninja/use-state-cache/issues/new)
-
-## Screenshots
-
-[Contribute](https://github.com/codejamninja/use-state-cache/blob/master/CONTRIBUTING.md) a screenshot
 
 ## Contributing
 
