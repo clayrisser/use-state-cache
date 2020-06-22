@@ -4,6 +4,8 @@
 
 > react hook to cache state
 
+I built this hook to cache and hydrate state using the same amazing `setState` api so familiar to react developers.
+
 Please ★ this repo if you found it useful ★ ★ ★
 
 ## Features
@@ -25,6 +27,15 @@ npm install --save use-state-cache
 
 > The lifecycle of the `useStateCache` hook differs slightly from the `useState` hook.
 
+```
+import useStateCache from 'use-state-cache';
+
+const [state, setState] = useStateCache('key', 'initial state');
+```
+
+You must provide a key to identify the location in cache that the state is stored in. It is safe
+to use the same key in separate components if you are accessing the same data.
+
 Note that the `todos` value is `undefined` until the cache is loaded. If the cache
 is empty or invalid, `todos` is initialized with the initial state. If the cache is valid, `todos`
 is initialized (hydrated) with the cache.
@@ -33,7 +44,11 @@ If the `setState` function is executed before `todos` has been initialized (befo
 loaded) then a warning will be logged. If the provider's `strict` prop is set to `true`, then an error
 will be thrown if `setState` is executed before `todos` has been initialized.
 
-### Setup the provider
+To prevent calling `setState` before initialization, simply ignore the `setState` function while the
+state is undefined. You can see in the example, I render `<div>Loading . . .</div>` when `todos` is
+undefined.
+
+#### Setup the provider
 
 ```ts
 import React, { FC } from 'react';
@@ -51,7 +66,7 @@ const App: FC<AppProps> = (props: AppProps) => (
 export default App;
 ```
 
-### Use the hook
+#### Use the hook
 
 ```ts
 import React, { FC, useState } from 'react';
@@ -61,7 +76,7 @@ export interface TodoProps {}
 
 const Todo: FC<TodoProps> = (props: TodoProps) => {
   const { todo, setTodo } = useState('');
-  const { todos, setTodos } = useStateCache<string[]>([]);
+  const { todos, setTodos } = useStateCache<string[]>('todos', []);
 
   function handleClick() {
     if (todos) setTodos([...todos, todo]);
@@ -79,6 +94,15 @@ const Todo: FC<TodoProps> = (props: TodoProps) => {
 
 export default Todo;
 ```
+
+### Provider Props
+
+| prop        | default                      | description                                                                         |
+| ---         | ----                         | ----------                                                                          |
+| `enabled`   | `true`                       | enable caching (when disabled, behavior is exactly like `setState`)                 |
+| `namespace` | name found in `package.json` | namespace keys in storage                                                           |
+| `silence`   | `false`                      | silence warnings                                                                    |
+| `strict`    | `false`                      | throw error when `setState` is called before state is initialized (cache is loaded) |
 
 ## Support
 
