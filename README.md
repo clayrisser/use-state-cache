@@ -23,6 +23,53 @@ npm install --save use-state-cache
 
 ## Usage
 
+### Setup the provider
+
+```ts
+import React, { FC } from 'react';
+import Todo from './Todo';
+import { Provider as UseStateCacheProvider } from 'use-state-cache';
+
+export interface AppProps {}
+
+const App: FC<AppProps> = (props: AppProps) => (
+  <UseStateCacheProvider>
+    <Todo />
+  </UseStateCacheProvider>
+);
+
+export default App;
+```
+
+### Use the hook
+
+```ts
+import React, { FC, useState } from 'react';
+import useStateCache from 'use-state-cache';
+
+export interface TodoProps {}
+
+const Todo: FC<TodoProps> = (props: TodoProps) => {
+  const { todo, setTodo } = useState('');
+  const { todos, setTodos } = useStateCache<string[]>([]);
+
+  function handleClick() {
+    if (todos) setTodos([...todos, todo]);
+  }
+
+  if (!todos) return <div>Loading . . .</div>
+  return (
+    <div>
+      <input id="todo" name="todo" onChange={(e: any) => setTodo(e.target.value)} />
+      <button onClick={handleClick}>Add Todo</button>
+      <div>{JSON.stringify(todos)}</div>
+    </div>
+  );
+}
+
+export default Todo;
+```
+
 [Contribute](https://github.com/codejamninja/use-state-cache/blob/master/CONTRIBUTING.md) usage docs
 
 ## Support

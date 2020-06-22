@@ -1,20 +1,22 @@
 import React, { FC, ReactNode } from 'react';
 import pkg from '../package.json';
-import StateCacheConfigContext, {
-  StateCacheConfig
-} from './contexts/stateCacheConfig';
+import StateCacheConfigContext from './contexts/stateCacheConfig';
 
-export interface ProviderProps extends StateCacheConfig {
+export interface ProviderProps {
   children: ReactNode;
+  enabled?: boolean;
+  namespace?: string;
+  silence?: boolean;
+  strict?: boolean;
 }
 
 const Provider: FC<ProviderProps> = (props: ProviderProps) => (
   <StateCacheConfigContext.Provider
     value={{
-      enabled: props.enabled,
-      namespace: props.namespace,
-      silence: props.silence,
-      strict: props.strict
+      enabled: props.enabled!,
+      namespace: props.namespace!,
+      silence: props.silence!,
+      strict: props.strict!
     }}
   >
     {props.children}
