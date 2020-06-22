@@ -4,7 +4,7 @@
 
 > react hook to cache state
 
-I built this hook to cache and hydrate state based on the same amazing `setState` api so familiar to react developers.
+I built this hook to cache and hydrate state based on the same amazing `setState` api.
 
 Please ★ this repo if you found it useful ★ ★ ★
 

@@ -1,6 +1,6 @@
 {
   "name": "use-state-cache",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "react hook to cache state",
   "keywords": [
     "use-state-cache",
