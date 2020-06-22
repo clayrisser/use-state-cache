@@ -23,6 +23,16 @@ npm install --save use-state-cache
 
 ## Usage
 
+> The lifecycle of the `useStateCache` hook differs slightly from the `useState` hook.
+
+Note that the `todos` value is `undefined` until the cache is loaded. If the cache
+is empty or invalid, `todos` is initialized with the initial state. If the cache is valid, `todos`
+is initialized (hydrated) with the cache.
+
+If the `setState` function is executed before `todos` has been initialized (before the cache has been
+loaded) then a warning will be logged. If the provider's `strict` prop is set to `true`, then an error
+will be thrown if `setState` is executed before `todos` has been initialized.
+
 ### Setup the provider
 
 ```ts
@@ -69,8 +79,6 @@ const Todo: FC<TodoProps> = (props: TodoProps) => {
 
 export default Todo;
 ```
-
-[Contribute](https://github.com/codejamninja/use-state-cache/blob/master/CONTRIBUTING.md) usage docs
 
 ## Support
 
