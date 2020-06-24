@@ -16,6 +16,7 @@ export default function useStateCache<T>(
   useEffect(() => {
     (async () => {
       if (!enabled) return;
+      setMutex(false);
       try {
         const cachedState = JSON.parse(await AsyncStorage.getItem(key));
         if (typeof cachedState !== 'undefined' && cachedState !== null) {
@@ -26,7 +27,6 @@ export default function useStateCache<T>(
       } catch (err) {
         setState(initialState);
       }
-      setMutex(false);
     })();
   }, []);
 
