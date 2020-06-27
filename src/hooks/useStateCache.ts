@@ -4,8 +4,10 @@ import useStateCacheConfig from './useStateCacheConfig';
 
 export default function useStateCache<T>(
   key: string,
-  initialState: T
-): [T | undefined, Dispatch<SetStateAction<T>>] {
+  initialState: T,
+  reconcile?: (cachedState: T, newState: T) => T
+): [T | undefined, Dispatch<SetStateAction<T>>, boolean] {
+  const [delayedStates, setDelayedStates] = useState<T[]>([]);
   const { enabled, namespace, silence, strict } = useStateCacheConfig();
   const [mutex, setMutex] = useState(enabled);
   const [state, setState] = useState<T | undefined>(
@@ -32,26 +34,54 @@ export default function useStateCache<T>(
 
   function handleSetState(setStateAction: SetStateAction<T>): void {
     if (mutex) {
-      const err = new Error('cannot set state while mutex locked');
-      if (strict) {
-        throw err;
-      } else if (!silence) {
-        console.warn(err);
+      if (reconcile) {
+        if (typeof setStateAction === 'function') {
+          const err = new Error(
+            'cannot use set state action while mutex locked'
+          );
+          if (strict) {
+            throw err;
+          } else if (!silence) {
+            console.warn(err);
+          }
+        }
+        setDelayedStates([...delayedStates, setStateAction as T]);
+      } else {
+        const err = new Error('cannot set state while mutex locked');
+        if (strict) {
+          throw err;
+        } else if (!silence) {
+          console.warn(err);
+        }
       }
       return;
     }
     if (typeof setStateAction === 'function') {
       return setState((prevState: T | undefined) => {
-        const state = (setStateAction as (prevState: T | undefined) => T)(
+        let state = (setStateAction as (prevState: T | undefined) => T)(
           prevState
         );
+        if (reconcile && delayedStates.length) {
+          state = delayedStates.reduce(
+            (state: T, delayedState: T) => reconcile(state, delayedState),
+            state
+          );
+        }
+        setDelayedStates([]);
         if (enabled) AsyncStorage.setItem(key, JSON.stringify(state));
         return state;
       });
     }
-    const state = setStateAction as T;
+    let state = setStateAction as T;
+    if (reconcile && delayedStates.length) {
+      state = delayedStates.reduce(
+        (state: T, delayedState: T) => reconcile(state, delayedState),
+        state
+      );
+    }
+    setDelayedStates([]);
     if (enabled) AsyncStorage.setItem(key, JSON.stringify(state));
     return setState(state);
   }
-  return [state, handleSetState];
+  return [state, handleSetState, mutex];
 }
