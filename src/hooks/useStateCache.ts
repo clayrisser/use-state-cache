@@ -1,15 +1,16 @@
 import AsyncStorage from '@callstack/async-storage';
 import {
-  useState,
   Dispatch,
   SetStateAction,
+  useCallback,
   useEffect,
-  useCallback
+  useMemo,
+  useState
 } from 'react';
 import useStateCacheConfig from './useStateCacheConfig';
 
 export default function useStateCache<T>(
-  key: string,
+  key: string | string[],
   initialState: T,
   reconcile?: (cachedState: T, newState: T) => T
 ): [T | undefined, Dispatch<SetStateAction<T>>, boolean] {
@@ -19,6 +20,10 @@ export default function useStateCache<T>(
   const [state, setState] = useState<T | undefined>(
     enabled ? undefined : initialState
   );
+  const memoizedKey = useMemo<string>(() => {
+    if (Array.isArray(key)) return [namespace, ...key].join('/');
+    return [namespace, key].join('/');
+  }, []);
 
   const reconcileDelayedState = useCallback(
     (newState: T, delayedStates: T[]): T => {
@@ -41,14 +46,12 @@ export default function useStateCache<T>(
     []
   );
 
-  key = `${namespace}/${key}`;
-
   useEffect(() => {
     (async () => {
       if (!enabled) return;
       setMutex(false);
       try {
-        const cachedState = JSON.parse(await AsyncStorage.getItem(key));
+        const cachedState = JSON.parse(await AsyncStorage.getItem(memoizedKey));
         if (typeof cachedState !== 'undefined' && cachedState !== null) {
           setState(cachedState);
         } else {
@@ -82,13 +85,13 @@ export default function useStateCache<T>(
       return setState((prevState: T | undefined) => {
         let newState = resolveStateAction(setStateAction, prevState);
         newState = reconcileDelayedState(newState, delayedStates);
-        if (enabled) AsyncStorage.setItem(key, JSON.stringify(state));
+        if (enabled) AsyncStorage.setItem(memoizedKey, JSON.stringify(state));
         return newState;
       });
     }
     let newState = setStateAction as T;
     newState = reconcileDelayedState(newState, delayedStates);
-    if (enabled) AsyncStorage.setItem(key, JSON.stringify(state));
+    if (enabled) AsyncStorage.setItem(memoizedKey, JSON.stringify(state));
     return setState(newState);
   }
   return [state, handleSetState, mutex];
