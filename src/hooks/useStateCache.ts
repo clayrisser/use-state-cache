@@ -1,4 +1,3 @@
-import AsyncStorage from '@callstack/async-storage';
 import {
   Dispatch,
   SetStateAction,
@@ -10,18 +9,32 @@ import {
 import useStateCacheConfig from './useStateCacheConfig';
 
 export default function useStateCache<T>(
-  key: string | string[],
+  key: number | string | (number | string | void | null)[],
   initialState: T,
   reconcile?: (cachedState: T, newState: T) => T
 ): [T | undefined, Dispatch<SetStateAction<T>>, boolean] {
   const [delayedStates, setDelayedStates] = useState<T[]>([]);
-  const { enabled, namespace, silence, strict } = useStateCacheConfig();
+  const {
+    asyncStorage,
+    enabled,
+    namespace,
+    silence,
+    strict
+  } = useStateCacheConfig();
+  const AsyncStorage = useMemo(() => asyncStorage, []);
   const [mutex, setMutex] = useState(enabled);
   const [state, setState] = useState<T | undefined>(
     enabled ? undefined : initialState
   );
   const memoizedKey = useMemo<string>(() => {
-    if (Array.isArray(key)) return [namespace, ...key].join('/');
+    if (Array.isArray(key)) {
+      return [
+        namespace,
+        ...key.filter((keyItem: null | number | string | void) => {
+          return typeof keyItem === 'number' || !!keyItem;
+        })
+      ].join('/');
+    }
     return [namespace, key].join('/');
   }, []);
 
