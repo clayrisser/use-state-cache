@@ -23,20 +23,30 @@ export default function useStateCache<T>(
   } = useStateCacheConfig();
   const AsyncStorage = useMemo(() => asyncStorage, []);
   const [mutex, setMutex] = useState(enabled);
+  const [calculatedKey, setCalculatedKey] = useState<string | undefined>(
+    calculateKey(key)
+  );
   const [state, setState] = useState<T | undefined>(
     enabled ? undefined : initialState
   );
-  const memoizedKey = useMemo<string>(() => {
+
+  function calculateKey(
+    key: number | string | (number | string | void | null)[]
+  ): string | undefined {
     if (Array.isArray(key)) {
-      return [
-        namespace,
-        ...key.filter((keyItem: null | number | string | void) => {
-          return typeof keyItem === 'number' || !!keyItem;
-        })
-      ].join('/');
+      if (
+        key.find(
+          (keyItem: null | number | string | void) =>
+            typeof keyItem === 'undefined' || keyItem === null
+        )
+      ) {
+        return undefined;
+      }
+      return [namespace, ...key].join('/');
     }
+    if (typeof key === 'undefined' || key === null) return undefined;
     return [namespace, key].join('/');
-  }, []);
+  }
 
   const reconcileDelayedState = useCallback(
     (newState: T, delayedStates: T[]): T => {
@@ -60,11 +70,17 @@ export default function useStateCache<T>(
   );
 
   useEffect(() => {
+    setCalculatedKey(calculateKey(key));
+  }, [key]);
+
+  useEffect(() => {
     (async () => {
-      if (!enabled) return;
+      if (!enabled || !calculatedKey) return;
       setMutex(false);
       try {
-        const cachedState = JSON.parse(await AsyncStorage.getItem(memoizedKey));
+        const cachedState = JSON.parse(
+          await AsyncStorage.getItem(calculatedKey)
+        );
         if (typeof cachedState !== 'undefined' && cachedState !== null) {
           setState(cachedState);
         } else {
@@ -77,6 +93,7 @@ export default function useStateCache<T>(
   }, []);
 
   function handleSetState(setStateAction: SetStateAction<T>): void {
+    if (!calculatedKey) return;
     if (mutex) {
       if (reconcile) {
         let delayedState = setStateAction as T;
@@ -98,13 +115,13 @@ export default function useStateCache<T>(
       return setState((prevState: T | undefined) => {
         let newState = resolveStateAction(setStateAction, prevState);
         newState = reconcileDelayedState(newState, delayedStates);
-        if (enabled) AsyncStorage.setItem(memoizedKey, JSON.stringify(state));
+        if (enabled) AsyncStorage.setItem(calculatedKey, JSON.stringify(state));
         return newState;
       });
     }
     let newState = setStateAction as T;
     newState = reconcileDelayedState(newState, delayedStates);
-    if (enabled) AsyncStorage.setItem(memoizedKey, JSON.stringify(state));
+    if (enabled) AsyncStorage.setItem(calculatedKey, JSON.stringify(state));
     return setState(newState);
   }
   return [state, handleSetState, mutex];
