@@ -4,6 +4,8 @@
 
 > react hook to cache state
 
+![](assets/use-state-cache.png)
+
 I built this hook to cache and hydrate state based on the same amazing `setState` api.
 
 Please ★ this repo if you found it useful ★ ★ ★
